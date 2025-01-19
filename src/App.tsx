@@ -22,7 +22,7 @@ const App: React.FC = () => {
   const [initialValue, setInitialValue] = useState<number>(2);
   const [finalOutput, setFinalOutput] = useState<number | null>(null);
 
-  const positionsRef = useRef<{ [id: number]: { x: number; y: number } }>({});
+  const positionsRef = useRef<{ [id: number]: { input: { x: number; y: number }; output: { x: number; y: number } } }>({});
 
   const calculateOutputs = useCallback(() => {
     const updatedFunctions = [...functions];
@@ -59,14 +59,16 @@ const App: React.FC = () => {
   }, [initialValue]);
 
   // Handle card positions dynamically
-  const updatePosition = (id: number, x: number, y: number) => {
-    positionsRef.current = { ...positionsRef.current, [id]: { x, y } };
+  const updatePosition = (id: number, inputPos: { x: number; y: number }, outputPos: { x: number; y: number }) => {
+    positionsRef.current = { ...positionsRef.current, [id]: { input: inputPos, output: outputPos } };
   };
 
   // Create connections based on nextFunctionId
   const connections: Connection[] = functions
     .filter((f) => f.nextFunctionId !== null)
     .map((f) => ({ from: f.id, to: f.nextFunctionId! }));
+
+
 
   return (
     <div className="relative min-h-screen bg-gray-100 p-8 flex flex-col items-center">
@@ -89,15 +91,7 @@ const App: React.FC = () => {
         {/* Function Cards */}
         <div className="relative grid grid-cols-3 gap-12">
           {functions.map((func, index) => (
-            <div
-              key={func.id}
-              ref={(el) => {
-                if (el) {
-                  const rect = el.getBoundingClientRect();
-                  updatePosition(func.id, rect.left + rect.width / 2, rect.top + rect.height / 2);
-                }
-              }}
-            >
+            <div key={func.id}>
               <FunctionCard
                 position={index + 1}
                 equation={func.equation}
@@ -109,6 +103,7 @@ const App: React.FC = () => {
                     return newFunctions;
                   })
                 }
+                updatePosition={updatePosition}
               />
             </div>
           ))}
