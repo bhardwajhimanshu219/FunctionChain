@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 
 interface FunctionCardProps {
   position: number;
   equation: string;
   nextFunctionId: number | null;
   onUpdate: (updatedEquation: string) => void;
+  updatePosition: (id: number, inputPos: { x: number; y: number }, outputPos: { x: number; y: number }) => void;
 }
 
 export const FunctionCard = ({
@@ -12,7 +13,27 @@ export const FunctionCard = ({
   equation,
   onUpdate,
   nextFunctionId,
+  updatePosition,
 }: FunctionCardProps) => {
+  const inputRef = useRef<HTMLDivElement>(null);
+  const outputRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const updatePositions = () => {
+      if (inputRef.current && outputRef.current) {
+        const inputRect = inputRef.current.getBoundingClientRect();
+        const outputRect = outputRef.current.getBoundingClientRect();
+        updatePosition(position, { x: inputRect.left + inputRect.width / 2, y: inputRect.top + inputRect.height / 2 }, { x: outputRect.left + outputRect.width / 2, y: outputRect.top + outputRect.height / 2 });
+      }
+    };
+
+    updatePositions();
+
+    // Update positions on window resize
+    window.addEventListener('resize', updatePositions);
+    return () => window.removeEventListener('resize', updatePositions);
+  }, [position, updatePosition]);
+
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newEquation = event.target.value;
     // Allow only valid mathematical expressions
@@ -68,13 +89,13 @@ export const FunctionCard = ({
         </select>
       </div>
       {/* Input and Output Markers */}
-      <div className="absolute bottom-5 left-2 flex items-center space-x-2 text-sm">
+      <div ref={inputRef} className="absolute bottom-5 left-2 flex items-center space-x-2 text-sm" id={`input-${position}`}>
         <div className="flex items-center space-x-1">
           <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
           <span>input</span>
         </div>
       </div>
-      <div className="absolute bottom-4 right-2 flex items-center space-x-2 text-sm">
+      <div ref={outputRef} className="absolute bottom-4 right-2 flex items-center space-x-2 text-sm" id={`output-${position}`}>
         <span>output</span>
         <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
       </div>

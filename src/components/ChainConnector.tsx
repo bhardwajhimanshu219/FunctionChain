@@ -1,21 +1,37 @@
-import React from "react";
+import React from 'react';
 
 export interface Connection {
   from: number;
   to: number;
 }
 
-export interface ChainConnectorProps {
+interface ChainConnectorProps {
   from: number;
   to: number;
-  positions: { [id: number]: { x: number; y: number } }; // Map of positions for each function card
+  positions: { [id: number]: { input: { x: number; y: number }; output: { x: number; y: number } } };
 }
 
 const ChainConnector: React.FC<ChainConnectorProps> = ({ from, to, positions }) => {
-  if (!positions[from] || !positions[to]) return null; // Guard against invalid positions
+  let fromPos, toPos;
 
-  const { x: startX, y: startY } = positions[from];
-  const { x: endX, y: endY } = positions[to];
+  if (from === 0) {
+    fromPos = { x: 100, y: 100 }; // Adjust these values to match the position of the initial input
+  } else {
+    fromPos = positions[from]?.output;
+  }
+
+  if (to === -1) {
+    toPos = { x: 200, y: 200 }; // Adjust these values to match the position of the final output
+  } else {
+    toPos = positions[to]?.input;
+  }
+
+  if (!fromPos || !toPos) return null;
+
+  const startX = fromPos.x;
+  const startY = fromPos.y;
+  const endX = toPos.x;
+  const endY = toPos.y;
 
   return (
     <svg
@@ -34,7 +50,7 @@ const ChainConnector: React.FC<ChainConnectorProps> = ({ from, to, positions }) 
   );
 };
 
-export const ConnectorLines: React.FC<{ connections: Connection[]; positions: { [id: number]: { x: number; y: number } } }> = ({
+export const ConnectorLines: React.FC<{ connections: Connection[]; positions: { [id: number]: { input: { x: number; y: number }; output: { x: number; y: number } } } }> = ({
   connections,
   positions,
 }) => {
